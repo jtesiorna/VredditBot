@@ -9,10 +9,16 @@ client = discord.Client()
 cl_token = open('clientToken.txt','r')
 clienttoken = cl_token.readline()
 
+#@client.event
+#async def on_ready():
+#    dev_channel = client.get_channel(564326006903537679)
+#    await dev_channel.send('heehoo meatpog.')
+
 @client.event
-async def on_ready():
-    dev_channel = client.get_channel(564326006903537679)
-    await dev_channel.send('heehoo meatpog.')
+async def on_message(message):
+
+    if message.content.startswith('$hello'):
+        await message.channel.send('Hello!')
 
 #Run the client on the server
 client.run(clienttoken)
