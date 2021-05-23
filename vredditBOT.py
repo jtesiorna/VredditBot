@@ -22,8 +22,10 @@ clienttoken = cl_token.readline()
 #EVENTS:
 @client.event
 async def on_message(message):
+    if message.author.id == client.user.id:
+        return
 #--------------------------------------------
-#lOOKS FOR AND GRABS V.REDD.IT LINK AND DOWNLOADS IT
+#LOOKS FOR AND GRABS V.REDD.IT LINK AND DOWNLOADS IT
     if message.content.startswith('https://www.reddit.com',0,22):
         url_address = message.content + '.json'
         headers = {'User-Agent': 'vredit_bot/v0.1'}
@@ -77,7 +79,8 @@ async def on_message(message):
 #--------------------------------------------
 #DELETE ORIGINAL LINK AND SEND VIDEO ON DISCORD CHANNEL
             file = discord.File(r'/mnt/d/Documents/Bot/vredditcompress.mp4')
-            await message.channel.send(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here's a link to the post comments: "+"<"+vreddit_url+">")
+            sender = message.author
+            await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here's a link to the post comments: "+"<"+vreddit_url+">", mention_author = False)
 
 #--------------------------------------------
 #CLEANUP DIRECTORY
