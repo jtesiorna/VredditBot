@@ -1,10 +1,12 @@
 #PACKAGES/IMPORTS
 from __future__ import unicode_literals
 import discord
-import urllib, requests
+import urllib
+import requests
 import json
 import uuid
-import os, ffmpeg
+import os
+import ffmpeg
 import youtube_dl
 from urllib.request import urlopen
 from discord.ext import commands
@@ -16,8 +18,8 @@ from discord.ext import commands
 client = discord.Client()
 
 #private information:
-cl_token = open('clientToken.txt','r')
-clienttoken = cl_token.readline()
+with open('clientToken.txt','r') as cl_token:
+    clienttoken = cl_token.read()
 
 #EVENTS:
 @client.event
@@ -26,7 +28,7 @@ async def on_message(message):
         return
 #--------------------------------------------
 #LOOKS FOR AND GRABS V.REDD.IT LINK AND DOWNLOADS IT
-    if message.content.startswith('https://www.reddit.com',0,22):
+    if message.content.startswith('reddit.com',12):
         url_address = message.content + '.json'
         headers = {'User-Agent': 'vredit_bot/v0.1'}
         raw_json = requests.get(url_address, headers=headers).json()
@@ -39,49 +41,57 @@ async def on_message(message):
             ydl_opts = {'outtmpl':'vredditvid_' + numgen}
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([vreddit_url])
+
+            vreddit_size = os.path.getsize('/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4')
+            if vreddit_size >= 8000:
 #--------------------------------------------
 #COMPRESS VIDEO TO <8MB
             #THIS CODE TAKEN FROM: https://stackoverflow.com/questions/64430805/how-to-compress-video-to-target-size-by-python
-            def compress_video(video_full_path, output_file_name, target_size):
+                def compress_video(video_full_path, output_file_name, target_size):
 
-                video_full_path = '/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4'
-                output_file_name = 'vredditcompress_' + numgen + '.mp4'
-                target_size = 8000
-                min_audio_bitrate = 32000
-                max_audio_bitrate = 256000
+                    video_full_path = '/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4'
+                    output_file_name = 'vredditcompress_' + numgen + '.mp4'
+                    target_size = 8000
+                    min_audio_bitrate = 32000
+                    max_audio_bitrate = 256000
 
-                probe = ffmpeg.probe(video_full_path)
-                # Video duration, in s.
-                duration = float(probe['format']['duration'])
-                # Audio bitrate, in bps.
-                audio_bitrate = float(next((s for s in probe['streams'] if s['codec_type'] == 'audio'), None)['bit_rate'])
+                    probe = ffmpeg.probe(video_full_path)
+                    # Video duration, in s.
+                    duration = float(probe['format']['duration'])
+                    # Audio bitrate, in bps.
+                    audio_bitrate = float(next((s for s in probe['streams'] if s['codec_type'] == 'audio'), None)['bit_rate'])
 
-                # Target total bitrate, in bps.
-                target_total_bitrate = (target_size * 1024 * 8) / (1.073741824 * duration)
+                    # Target total bitrate, in bps.
+                    target_total_bitrate = (target_size * 1024 * 8) / (1.073741824 * duration)
 
-                # Target audio bitrate, in bps
-                if 10 * audio_bitrate > target_total_bitrate:
-                    audio_bitrate = target_total_bitrate / 10
-                    if audio_bitrate < min_audio_bitrate < target_total_bitrate:
-                        audio_bitrate = min_audio_bitrate
-                    elif audio_bitrate > max_audio_bitrate:
-                        audio_bitrate = max_audio_bitrate
-                # Target video bitrate, in bps.
-                video_bitrate = target_total_bitrate - audio_bitrate
+                    # Target audio bitrate, in bps
+                    if 10 * audio_bitrate > target_total_bitrate:
+                        audio_bitrate = target_total_bitrate / 10
+                        if audio_bitrate < min_audio_bitrate < target_total_bitrate:
+                            audio_bitrate = min_audio_bitrate
+                        elif audio_bitrate > max_audio_bitrate:
+                            audio_bitrate = max_audio_bitrate
+                    # Target video bitrate, in bps.
+                    video_bitrate = target_total_bitrate - audio_bitrate
 
-                i = ffmpeg.input(video_full_path)
-                ffmpeg.output(i, os.devnull,
-                              **{'c:v': 'libx264', 'b:v': video_bitrate, 'pass': 1, 'f': 'mp4'}
-                              ).overwrite_output().run()
-                ffmpeg.output(i, output_file_name,
-                              **{'c:v': 'libx264', 'b:v': video_bitrate, 'pass': 2, 'c:a': 'aac', 'b:a': audio_bitrate}
-                              ).overwrite_output().run()
-            compress_video('input.mp4', 'output.mp4', 50 * 1000)
+                    i = ffmpeg.input(video_full_path)
+                    ffmpeg.output(i, os.devnull,
+                                  **{'c:v': 'libx264', 'b:v': video_bitrate, 'pass': 1, 'f': 'mp4'}
+                                  ).overwrite_output().run()
+                    ffmpeg.output(i, output_file_name,
+                                  **{'c:v': 'libx264', 'b:v': video_bitrate, 'pass': 2, 'c:a': 'aac', 'b:a': audio_bitrate}
+                                  ).overwrite_output().run()
+                compress_video('input.mp4', 'output.mp4', 50 * 1000)
+
+                file = discord.File(r'/mnt/d/Documents/Bot/vredditcompress_' + numgen + '.mp4')
+                sender = message.author
+                await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here's a direct link to the post comments: "+"<"+vreddit_url+">", mention_author = False)
 #--------------------------------------------
 #REPLIES TO ORIGINAL LINK AND SENDS VIDEO ON DISCORD CHANNEL
-            file = discord.File(r'/mnt/d/Documents/Bot/vredditcompress_' + numgen + '.mp4')
-            sender = message.author
-            await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here's a link to the post comments: "+"<"+vreddit_url+">", mention_author = False)
+            else:
+                file = discord.File(r'/mnt/d/Documents/Bot/vredditcompress_' + numgen + '.mp4')
+                sender = message.author
+                await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here's a direct link to the post comments: "+"<"+vreddit_url+">", mention_author = False)
 
 #--------------------------------------------
 #CLEANUP DIRECTORY
