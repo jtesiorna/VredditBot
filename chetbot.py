@@ -38,12 +38,12 @@ async def on_message(message):
         numgen = str(uuid.uuid4())
         vreddit_url = json_data[0]['data']['children'][0]['data']['url']
         if vreddit_url.startswith('https://v.redd.it'):
-            ydl_opts = {'outtmpl':'vredditvid_' + numgen}
+            ydl_opts = {'outtmpl':'vredditvid_' + numgen + '.mp4'}
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([vreddit_url])
 
             vreddit_size = os.path.getsize('/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4')
-            if vreddit_size >= 8000:
+            if vreddit_size >= 8388608:
 #--------------------------------------------
 #COMPRESS VIDEO TO <8MB
             #THIS CODE TAKEN FROM: https://stackoverflow.com/questions/64430805/how-to-compress-video-to-target-size-by-python
@@ -54,8 +54,13 @@ async def on_message(message):
                     target_size = 8000
                     min_audio_bitrate = 32000
                     max_audio_bitrate = 256000
-
-                    probe = ffmpeg.probe(video_full_path)
+                    probe = None
+                    try:
+                        probe = ffmpeg.probe(video_full_path)
+                    except ffmpeg.Error as e:
+                        print(e.stderr)
+                        exit()
+#                    probe = ffmpeg.probe(video_full_path)
                     # Video duration, in s.
                     duration = float(probe['format']['duration'])
                     # Audio bitrate, in bps.
@@ -86,16 +91,17 @@ async def on_message(message):
                 file = discord.File(r'/mnt/d/Documents/Bot/vredditcompress_' + numgen + '.mp4')
                 sender = message.author
                 await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here's a direct link to the post comments: "+"<"+vreddit_url+">", mention_author = False)
+                os.remove('vredditcompress_' + numgen + '.mp4')
 #--------------------------------------------
 #REPLIES TO ORIGINAL LINK AND SENDS VIDEO ON DISCORD CHANNEL
             else:
-                file = discord.File(r'/mnt/d/Documents/Bot/vredditcompress_' + numgen + '.mp4')
+                file = discord.File(r'/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4')
                 sender = message.author
                 await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here's a direct link to the post comments: "+"<"+vreddit_url+">", mention_author = False)
 
 #--------------------------------------------
 #CLEANUP DIRECTORY
-            os.remove('vredditcompress_' + numgen + '.mp4')
+
             os.remove('vredditvid_' + numgen + '.mp4')
             os.remove('ffmpeg2pass-0.log')
             os.remove('ffmpeg2pass-0.log.mbtree')
