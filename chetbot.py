@@ -6,6 +6,7 @@ import requests
 import json
 import uuid
 import os
+import re
 import ffmpeg
 import youtube_dl
 from urllib.request import urlopen
@@ -28,7 +29,11 @@ async def on_message(message):
         return
 #--------------------------------------------
 #LOOKS FOR AND GRABS V.REDD.IT LINK AND DOWNLOADS IT
-    if message.content.startswith('reddit.com',12):
+    pattern = 'https://(old\.|new\.|www\.)?reddit\.com/r/([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?'
+    discord_message = message.content
+    match = re.search(pattern, discord_message)
+
+    if match.group(0):
         url_address = message.content + '.json'
         headers = {'User-Agent': 'vredit_bot/v0.1'}
         raw_json = requests.get(url_address, headers=headers).json()
