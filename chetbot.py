@@ -11,6 +11,10 @@ client = discord.Client()
 with open('clientToken.txt','r') as cl_token:
     clienttoken = cl_token.read()
 
+def cleanup_files(numgen):
+    os.remove('vredditvid_' + numgen + '.mp4')
+    os.remove('ffmpeg2pass-0.log')
+    os.remove('ffmpeg2pass-0.log.mbtree')
 
 #EVENTS:
 @client.event
@@ -18,8 +22,6 @@ async def on_message(message):
     numgen = str(uuid.uuid4())
     if message.author.id == client.user.id:
         return
-#--------------------------------------------
-#LOOKS FOR AND GRABS V.REDD.IT LINK AND DOWNLOADS IT
     reg_pattern = 'https://(old\.|new\.|www\.)?reddit\.com/r/([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?'
     vreddit_pattern = 'https://v\.redd\.it/([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?'
     discord_message = message.content
@@ -42,21 +44,16 @@ async def on_message(message):
 
             vreddit_size = os.path.getsize('/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4')
             if vreddit_size >= 8388608:
-#--------------------------------------------
-#COMPRESS VIDEO TO <8MB
                 compress_video('input.mp4', 'output.mp4', 50 * 1000, numgen)
-
                 file = discord.File(r'/mnt/d/Documents/Bot/vredditcompress_' + numgen + '.mp4')
                 sender = message.author
                 await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here's a direct link to the post comments: "+"<"+vreddit_url+">", mention_author = False)
                 os.remove('vredditcompress_' + numgen + '.mp4')
-#--------------------------------------------
-#REPLIES TO ORIGINAL LINK AND SENDS VIDEO ON DISCORD CHANNEL
+
             else:
                 file = discord.File(r'/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4')
                 sender = message.author
                 await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here's a direct link to the post comments: "+"<"+vreddit_url+">", mention_author = False)
-
             cleanup_files(numgen)
         else:
             return
@@ -86,10 +83,7 @@ async def on_message(message):
 client.run(clienttoken)
 
 
-def cleanup_files(numgen):
-    os.remove('vredditvid_' + numgen + '.mp4')
-    os.remove('ffmpeg2pass-0.log')
-    os.remove('ffmpeg2pass-0.log.mbtree')
+
 
 #THIS CODE TAKEN FROM: https://stackoverflow.com/questions/64430805/how-to-compress-video-to-target-size-by-python
 def compress_video(video_full_path, output_file_name, target_size, numgen):
