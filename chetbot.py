@@ -26,7 +26,7 @@ def main(argc, argv):
         vreddit_match = re.search(vreddit_pattern, discord_message)
 
         if reg_match:
-            raw_reg_url = reg_match.group(0)
+            raw_reg_url = 'https://www.reddit.com/r/' + reg_match.group(2)
             url_address = raw_reg_url + '.json'
             headers = {'User-Agent': 'vredit_bot/v0.1'}
             raw_json = requests.get(url_address, headers=headers).json()
