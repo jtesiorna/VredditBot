@@ -5,19 +5,17 @@ from urllib.request import urlopen
 from discord.ext import commands
 
 #-----------------------------------------------------------------------------
-#BOT EVENTS/INFORMATION
-
 #Client (the bot)
 client = discord.Client()
-
 #private information:
 with open('clientToken.txt','r') as cl_token:
     clienttoken = cl_token.read()
-numgen = str(uuid.uuid4())
+
 
 #EVENTS:
 @client.event
 async def on_message(message):
+    numgen = str(uuid.uuid4())
     if message.author.id == client.user.id:
         return
 #--------------------------------------------
@@ -58,9 +56,8 @@ async def on_message(message):
                 file = discord.File(r'/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4')
                 sender = message.author
                 await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here's a direct link to the post comments: "+"<"+vreddit_url+">", mention_author = False)
-#--------------------------------------------
-#CLEANUP DIRECTORY
-            cleanup()
+
+            cleanup_files(numgen)
         else:
             return
 
@@ -82,20 +79,20 @@ async def on_message(message):
             file = discord.File(r'/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4')
             sender = message.author
             await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here's a direct link to the post comments: "+"<"+raw_vreddit_url+">", mention_author = False)
-        cleanup()
+        cleanup_files(numgen)
     else:
         return
 #Run the client on the server
 client.run(clienttoken)
 
 
-async def cleanup():
+def cleanup_files(numgen):
     os.remove('vredditvid_' + numgen + '.mp4')
     os.remove('ffmpeg2pass-0.log')
     os.remove('ffmpeg2pass-0.log.mbtree')
 
 #THIS CODE TAKEN FROM: https://stackoverflow.com/questions/64430805/how-to-compress-video-to-target-size-by-python
-async def compress_video(video_full_path, output_file_name, target_size, numgen):
+def compress_video(video_full_path, output_file_name, target_size, numgen):
     video_full_path = '/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4'
     output_file_name = 'vredditcompress_' + numgen + '.mp4'
     target_size = 8000
