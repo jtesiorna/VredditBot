@@ -1,13 +1,14 @@
 #PACKAGES/IMPORTS
 from __future__ import unicode_literals
-import discord, requests, json, uuid, os, re, ffmpeg, youtube_dl
+import discord, requests, json, uuid, os, re, ffmpeg, youtube_dl, urllib, sqlite3
 from urllib.request import urlopen
 from discord.ext import commands
 from sys import argv
 
 #-----------------------------------------------------------------------------
-#Client (the bot)
+#Global variables
 client = discord.Client()
+DEFAULT_PATH = os.path.join(os.path.dirname(__file__), 'database.discordurl')
 
 def main(argc, argv):
     #Private information:
@@ -27,8 +28,8 @@ async def on_message(message):
     numgen = str(uuid.uuid4())
     if message.author.id == client.user.id:
         return
-    reg_pattern = 'https://(old\.|new\.|www\.)?reddit\.com/r/([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?'
-    vreddit_pattern = 'https://v\.redd\.it/([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?'
+    reg_pattern = 'https://(old\.|new\.|www\.)?reddit\.com/r/([\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
+    vreddit_pattern = 'https://v\.redd\.it/([\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
     discord_message = message.content
     reg_match = re.search(reg_pattern, discord_message)
     vreddit_match = re.search(vreddit_pattern, discord_message)
@@ -43,6 +44,8 @@ async def on_message(message):
 
 
         vreddit_url = json_data[0]['data']['children'][0]['data']['url']
+        #if vreddit.url.startswith = query sqlite database
+        #elif do the stuff below
         if vreddit_url.startswith('https://v.redd.it'):
             ydl_opts = {'outtmpl':'vredditvid_' + numgen + '.mp4'}
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
@@ -60,6 +63,9 @@ async def on_message(message):
                 file = discord.File(r'/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4')
                 sender = message.author
                 await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here's a direct link to the post comments: "+"<"+vreddit_url+">", mention_author = False)
+                #add vreddit_url and discord link to table
+                discordapp_url = '1'
+                db_connect(db_path=DEFAULT_PATH).execute("insert into contacts (name, phone, email) values (?, ?, ?)",(vreddit_url,discordapp_url))
             cleanup_files(numgen)
         else:
             return
@@ -131,6 +137,10 @@ def compress_video(video_full_path, output_file_name, target_size, numgen):
     ffmpeg.output(i, output_file_name,
                   **{'c:v': 'libx264', 'b:v': video_bitrate, 'pass': 2, 'c:a': 'aac', 'b:a': audio_bitrate}
                   ).overwrite_output().run()
+
+def db_connect(db_path=DEFAULT_PATH):
+    con = sqlite3.connect(db_path)
+    return con
 
 if __name__ == '__main__':
   main(len(argv), argv)
