@@ -17,6 +17,7 @@ def main(argc, argv):
     #Private information:
     with open('clientToken.txt','r') as cl_token:
         clienttoken = cl_token.read()
+
     #Run the client on the server
     client.run(clienttoken)
 
@@ -30,8 +31,10 @@ async def on_ready():
 @client.event
 async def on_message(message):
     numgen = str(uuid.uuid4())
+    
     if message.author.id == client.user.id:
         return
+
     reg_pattern = 'https://(old\.|new\.|www\.)?reddit\.com/r/([\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
     vreddit_pattern = 'https://v\.redd\.it/([\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
     discord_message = message.content

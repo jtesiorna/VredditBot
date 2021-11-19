@@ -1,3 +1,10 @@
+from __future__ import unicode_literals
+import discord, requests, json, uuid, os, re, ffmpeg, yt_dlp, urllib, sqlite3
+from urllib.request import urlopen
+from discord.ext import commands
+from sys import argv
+import random
+
 #THIS CODE TAKEN FROM: https://stackoverflow.com/questions/64430805/how-to-compress-video-to-target-size-by-python
 def compress_video(video_full_path, output_file_name, target_size, numgen):
     video_full_path = '/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4'
