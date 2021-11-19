@@ -1,5 +1,7 @@
 clientToken.txt
 thankreplies.py
+__pycache__
+test.py
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,windows,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,windows,macos
