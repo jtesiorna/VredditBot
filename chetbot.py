@@ -1,6 +1,6 @@
 #PACKAGES/IMPORTS
 from __future__ import unicode_literals
-import discord, requests, json, uuid, os, re, ffmpeg, youtube_dl, urllib, sqlite3
+import discord, requests, json, uuid, os, re, ffmpeg, yt_dlp, urllib, sqlite3
 from urllib.request import urlopen
 from discord.ext import commands
 from sys import argv
@@ -55,7 +55,7 @@ async def on_message(message):
         #elif do the stuff below
         if vreddit_url.startswith('https://v.redd.it'):
             ydl_opts = {'outtmpl':'vredditvid_' + numgen + '.mp4'}
-            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([vreddit_url])
 
             vreddit_size = os.path.getsize('/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4')
@@ -102,7 +102,7 @@ async def on_message(message):
     elif vreddit_match:
         raw_vreddit_url = vreddit_match.group(0)
         ydl_opts = {'outtmpl':'vredditvid_' + numgen + '.mp4'}
-        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([raw_vreddit_url])
 
         vreddit_size = os.path.getsize('/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4')
