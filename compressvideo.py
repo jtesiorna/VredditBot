@@ -21,20 +21,25 @@ def compress_video(video_full_path, output_file_name, target_size, numgen):
     # Video duration, in s.
     duration = float(probe['format']['duration'])
     # Audio bitrate, in bps.
-    if ffmpeg.probe(video_full_path, select_streams='a')['streams']:
-        audio_bitrate = float(next((s for s in probe['streams'] if s['codec_type'] == 'audio'), None)['bit_rate'])
-    else:
-        audio_bitrate = 1
-    # Target total bitrate, in bps.
-    target_total_bitrate = (target_size * 1024 * 8) / (1.073741824 * duration)
+    try:
+        if ffmpeg.probe(video_full_path, select_streams='a')['streams']:
+            audio_bitrate = float(next((s for s in probe['streams'] if s['codec_type'] == 'audio'), None)['bit_rate'])
+        else:
+            audio_bitrate = 1
+        # Target total bitrate, in bps.
+        target_total_bitrate = (target_size * 1024 * 8) / (1.073741824 * duration)
 
-    # Target audio bitrate, in bps
-    if 10 * audio_bitrate > target_total_bitrate:
-        audio_bitrate = target_total_bitrate / 10
-        if audio_bitrate < min_audio_bitrate < target_total_bitrate:
-            audio_bitrate = min_audio_bitrate
-        elif audio_bitrate > max_audio_bitrate:
-            audio_bitrate = max_audio_bitrate
+        # Target audio bitrate, in bps
+        if 10 * audio_bitrate > target_total_bitrate:
+            audio_bitrate = target_total_bitrate / 10
+            if audio_bitrate < min_audio_bitrate < target_total_bitrate:
+                audio_bitrate = min_audio_bitrate
+            elif audio_bitrate > max_audio_bitrate:
+                audio_bitrate = max_audio_bitrate
+
+    except ffmpeg.Error as e:
+        print(e.stderr)
+        exit(1)
     # Target video bitrate, in bps.
     video_bitrate = target_total_bitrate - audio_bitrate
 

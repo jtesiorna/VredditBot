@@ -17,7 +17,6 @@ def main(argc, argv):
     #Private information:
     with open('clientToken.txt','r') as cl_token:
         clienttoken = cl_token.read()
-
     #Run the client on the server
     client.run(clienttoken)
 
@@ -25,16 +24,14 @@ def main(argc, argv):
 @client.event
 async def on_ready():
     print("Yep. It's working.")
-    activityname = "Reddit videos!"
+    activityname = "Ye mum."
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name=activityname))
 
 @client.event
 async def on_message(message):
     numgen = str(uuid.uuid4())
-    
     if message.author.id == client.user.id:
         return
-
     reg_pattern = 'https://(old\.|new\.|www\.)?reddit\.com/r/([\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
     vreddit_pattern = 'https://v\.redd\.it/([\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
     discord_message = message.content
@@ -75,7 +72,7 @@ async def on_message(message):
             else:
                 file = discord.File(r'/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4')
                 sender = message.author
-                await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "Title: **" + post_title + "**" +"\n<" + "vreddit_url(get rid of quotes on prod)" + ">", mention_author = False)
+                await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "Title: **" + post_title + "**" +"\n<" + "raw_vreddit_url(get rid of quotes on prod)" + ">", mention_author = False)
                 #add vreddit_url and discord link to table
                 discordapp_url = '1'
                 db_connect(db_path=DEFAULT_PATH).execute("insert into contacts (name, phone, email) values (?, ?, ?)",(vreddit_url,discordapp_url))
