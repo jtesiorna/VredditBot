@@ -32,17 +32,13 @@ async def on_message(message):
     numgen = str(uuid.uuid4())
     if message.author.id == client.user.id:
         return
-    reg_pattern = 'https://(old\.|new\.|www\.)?reddit\.com/r/([\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
-    vreddit_pattern = 'https://v\.redd\.it/([\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
     discord_message = message.content
     tc_ss = "thanks chet"
     tc = discord_message.lower()
-    reg_match = re.search(reg_pattern, discord_message)
-    vreddit_match = re.search(vreddit_pattern, discord_message)
+    reg_match = get_pattern
 
 #-------------------------------------------------------------------------------
 # Main code block for getting the v.redd.it video, downloading, compressing, etc.
-
     if reg_match:
         raw_reg_url = 'https://www.reddit.com/r/' + reg_match.group(2)
         url_address = raw_reg_url + '.json'
@@ -83,31 +79,10 @@ async def on_message(message):
                 await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "Title: **" + post_title + "**" +"\n<" + "raw_vreddit_url(get rid of quotes on prod)" + ">", mention_author = False)
                 #add vreddit_url and discord link to table
                 discordapp_url = '1'
-                db_connect(db_path=DEFAULT_PATH).execute("insert into contacts (name, phone, email) values (?, ?, ?)",(vreddit_url,discordapp_url))
+                # db_connect(db_path=DEFAULT_PATH).execute("insert into contacts (name, phone, email) values (?, ?, ?)",(vreddit_url,discordapp_url))
             cleanup_files(raw_video_name, compressed_video_name)
-
         else:
             return
-
-    elif vreddit_match:
-        raw_vreddit_url = vreddit_match.group(0)
-        ydl_opts = {'outtmpl':'vredditvid_' + numgen + '.mp4'}
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([raw_vreddit_url])
-
-        vreddit_size = os.path.getsize('/mnt/d/Documents/Bot/' + raw_video_name)
-        if vreddit_size >= 8388608:
-            compress_video('input.mp4', 'output.mp4', 50 * 1000, numgen)
-
-            file = discord.File(r'/mnt/d/Documents/Bot/' + compressed_video_name)
-            sender = message.author
-            await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "<" + "raw_vreddit_url(get rid of quotes on prod)" + ">", mention_author = False)
-            os.remove(compressed_video_name)
-        else:
-            file = discord.File(r'/mnt/d/Documents/Bot/' + raw_video_name)
-            sender = message.author
-            await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "<" + "raw_vreddit_url(get rid of quotes on prod)" + ">", mention_author = False)
-        cleanup_files(raw_video_name, compressed_video_name)
 
 #-------------------------------------------------------------------------------
     elif tc_ss in tc:
@@ -118,7 +93,6 @@ async def on_message(message):
     #specifically for personal server. If you're using this code, you can remove this elif statement.
     elif "chet?" in tc:
         await message.reply(content="<:chetstare:880848415792173117>", mention_author= False)
-
 
     else:
         return
@@ -131,7 +105,13 @@ def cleanup_files(raw, compressed):
     os.remove('ffmpeg2pass-0.log')
     os.remove('ffmpeg2pass-0.log.mbtree')
 
+def get_pattern(raw):
+    link_pattern = '(https://[old|new|www|v]+\.[reddit|redd]+\.[com|it]+[\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
+    reg_pattern = 'https://(old\.|new\.|www\.)?reddit\.com/r/([\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
+    link = re.search(link_pattern, discord_message)
 
+    if link:
+        return re.search(reg_pattern, requests.head(link.group(1), allow_redirects = True).url)
 
 def db_connect(db_path=DEFAULT_PATH):
     con = sqlite3.connect(db_path)
