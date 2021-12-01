@@ -5,6 +5,7 @@ from urllib.request import urlopen
 from discord.ext import commands
 from sys import argv
 import random
+from thankreplies import thankreply
 from compressvideo import compress_video
 
 #-----------------------------------------------------------------------------
