@@ -5,13 +5,13 @@ from urllib.request import urlopen
 from discord.ext import commands
 from sys import argv
 import random
-from thankreplies import thankreply
 from compressvideo import compress_video
 
 #-----------------------------------------------------------------------------
 #Global variables
 client = discord.Client()
 DEFAULT_PATH = os.path.join(os.path.dirname(__file__), 'database.discordurl')
+video_directory = '/home/nikita/Documents/Bot/'
 
 def main(argc, argv):
     #Private information:
@@ -35,7 +35,7 @@ async def on_message(message):
     discord_message = message.content
     tc_ss = "thanks chet"
     tc = discord_message.lower()
-    reg_match = get_pattern
+    reg_match = get_pattern(discord_message)
 
 #-------------------------------------------------------------------------------
 # Main code block for getting the v.redd.it video, downloading, compressing, etc.
@@ -46,7 +46,6 @@ async def on_message(message):
         raw_json = requests.get(url_address, headers=headers).json()
         json_parsed = json.dumps(raw_json)
         json_data = json.loads(json_parsed)
-
 
         vreddit_url = json_data[0]['data']['children'][0]['data']['url']
         post_title = json_data[0]['data']['children'][0]['data']['title']
@@ -61,20 +60,20 @@ async def on_message(message):
         #if vreddit.url.startswith = query sqlite database
         #elif do the stuff below
         if vreddit_url.startswith('https://v.redd.it'):
-            ydl_opts = {'outtmpl':raw_video_name}
+            ydl_opts = {'outtmpl':video_directory + raw_video_name}
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([vreddit_url])
 
-            vreddit_size = os.path.getsize('/mnt/d/Documents/Bot/' + raw_video_name)
+            vreddit_size = os.path.getsize(video_directory + raw_video_name)
             if vreddit_size >= 8388608:
                 compress_video('input.mp4', 'output.mp4', 50 * 1000, numgen)
-                file = discord.File(r'/mnt/d/Documents/Bot/' + compressed_video_name)
+                file = discord.File(video_directory + compressed_video_name)
                 sender = message.author
                 await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "Title: **" + post_title + "**" +"\n<" + "vreddit_url (get rid of quotes on prod)" +">", mention_author = False)
-                os.remove(compressed_video_name)
+                # os.remove(compressed_video_name)
 
             else:
-                file = discord.File(r'/mnt/d/Documents/Bot/' + raw_video_name)
+                file = discord.File(video_directory + raw_video_name)
                 sender = message.author
                 await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "Title: **" + post_title + "**" +"\n<" + "raw_vreddit_url(get rid of quotes on prod)" + ">", mention_author = False)
                 #add vreddit_url and discord link to table
@@ -97,8 +96,6 @@ async def on_message(message):
     else:
         return
 
-
-
 def cleanup_files(raw, compressed):
     os.remove(raw)
     os.remove(compressed)
@@ -108,9 +105,10 @@ def cleanup_files(raw, compressed):
 def get_pattern(raw):
     link_pattern = '(https://[old|new|www|v]+\.[reddit|redd]+\.[com|it]+[\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
     reg_pattern = 'https://(old\.|new\.|www\.)?reddit\.com/r/([\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
-    link = re.search(link_pattern, discord_message)
+    link = re.search(link_pattern, raw)
 
     if link:
+        print("Homogenised URL: {}".format(link))
         return re.search(reg_pattern, requests.head(link.group(1), allow_redirects = True).url)
 
 def db_connect(db_path=DEFAULT_PATH):
