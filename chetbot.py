@@ -5,7 +5,7 @@ from urllib.request import urlopen
 from discord.ext import commands
 from sys import argv
 import random
-from thankreplies import thankreply
+#from thankreplies import thankreply
 from compressvideo import compress_video
 
 #-----------------------------------------------------------------------------
@@ -104,7 +104,7 @@ def cleanup_files(raw, compressed):
     os.remove('ffmpeg2pass-0.log.mbtree')
 
 def get_pattern(raw):
-    link_pattern = '(https://[old|new|www|v]+\.[reddit|redd]+\.[com|it]+[\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
+    link_pattern = '(https:\/\/[old|new|www|v]+\.[reddit|redd]+\.[com|it]+[\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])+'
     reg_pattern = 'https://(old\.|new\.|www\.)?reddit\.com/r/([\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
     link = re.search(link_pattern, raw)
 
