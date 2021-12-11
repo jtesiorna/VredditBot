@@ -5,14 +5,14 @@ from urllib.request import urlopen
 from discord.ext import commands
 from sys import argv
 import random
-#from thankreplies import thankreply
+from thankreplies import thankreply
 from compressvideo import compress_video
 
 #-----------------------------------------------------------------------------
 #Global variables
 client = discord.Client()
 DEFAULT_PATH = os.path.join(os.path.dirname(__file__), 'database.discordurl')
-video_directory = '/home/nikita/Documents/Bot/'
+video_directory = '/home/nikita/Documents/Bot/' # <-- MODIFY THIS TO MATCH YOUR SHIT
 
 def main(argc, argv):
     #Private information:
