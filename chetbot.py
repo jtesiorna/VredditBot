@@ -12,6 +12,7 @@ from compressvideo import compress_video
 #Global variables
 client = discord.Client()
 DEFAULT_PATH = os.path.join(os.path.dirname(__file__), 'database.discordurl')
+video_directory = '/mnt/d/Documents/Bot/' # <-- MODIFY THIS TO MATCH YOUR SHIT
 
 def main(argc, argv):
     #Private information:
@@ -32,17 +33,14 @@ async def on_message(message):
     numgen = str(uuid.uuid4())
     if message.author.id == client.user.id:
         return
-    reg_pattern = 'https://(old\.|new\.|www\.)?reddit\.com/r/([\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
-    vreddit_pattern = 'https://v\.redd\.it/([\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
     discord_message = message.content
     tc_ss = "thanks chet"
     tc = discord_message.lower()
-    reg_match = re.search(reg_pattern, discord_message)
-    vreddit_match = re.search(vreddit_pattern, discord_message)
+    reg_match = get_pattern(discord_message)
+
 
 #-------------------------------------------------------------------------------
 # Main code block for getting the v.redd.it video, downloading, compressing, etc.
-
     if reg_match:
         raw_reg_url = 'https://www.reddit.com/r/' + reg_match.group(2)
         url_address = raw_reg_url + '.json'
@@ -51,78 +49,42 @@ async def on_message(message):
         json_parsed = json.dumps(raw_json)
         json_data = json.loads(json_parsed)
 
-
         vreddit_url = json_data[0]['data']['children'][0]['data']['url']
         post_title = json_data[0]['data']['children'][0]['data']['title']
         nsfw_tag = json_data[0]['data']['children'][0]['data']['over_18']
+        raw_video_name = "vredditvid_" + numgen + ".mp4"
+        compressed_video_name = "vredditcompress_" + numgen + ".mp4"
+
+        if json_data[0]['data']['children'][0]['data']['over_18']:
+            raw_video_name = "SPOILER_" + raw_video_name
+            compressed_video_name = "SPOILER_" + compressed_video_name
 
         #if vreddit.url.startswith = query sqlite database
         #elif do the stuff below
         if vreddit_url.startswith('https://v.redd.it'):
-            if nsfw_tag:
-                ydl_opts = {'outtmpl':'SPOILER_vredditvid_' + numgen + '.mp4'}
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    ydl.download([vreddit_url])
+            ydl_opts = {'outtmpl':video_directory + raw_video_name}
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([vreddit_url])
 
-                vreddit_size = os.path.getsize('/mnt/d/Documents/Bot/SPOILER_vredditvid_' + numgen + '.mp4')
-                if vreddit_size >= 8388608:
-                    compress_video('input.mp4', 'output.mp4', 50 * 1000, numgen)
-                    file = discord.File(r'/mnt/d/Documents/Bot/SPOILER_vredditcompress_' + numgen + '.mp4')
-                    sender = message.author
-                    await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "Title: **" + post_title + "**" +"\n<" + "vreddit_url (get rid of quotes on prod)" +">", mention_author = False)
-                    os.remove('SPOILER_vredditcompress_' + numgen + '.mp4')
+            vreddit_size = os.path.getsize(video_directory + raw_video_name)
+            if vreddit_size >= 8388608:
+                #compress_video('input.mp4', 'output.mp4', 50 * 1000, numgen)
+                compress_video(video_directory+raw_video_name, compressed_video_name, 50 * 1000, numgen)
+                file = discord.File(video_directory + compressed_video_name)
+                sender = message.author
+                await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "Title: **" + post_title + "**" +"\n<" + vreddit_url +">", mention_author = False)
+                # os.remove(compressed_video_name)
 
-                else:
-                    file = discord.File(r'/mnt/d/Documents/Bot/SPOILER_vredditvid_' + numgen + '.mp4')
-                    sender = message.author
-                    await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "Title: **" + post_title + "**" +"\n<" + "raw_vreddit_url(get rid of quotes on prod)" + ">", mention_author = False)
-                    #add vreddit_url and discord link to table
-                    discordapp_url = '1'
-                    db_connect(db_path=DEFAULT_PATH).execute("insert into contacts (name, phone, email) values (?, ?, ?)",(vreddit_url,discordapp_url))
-                cleanup_files(numgen)
             else:
-                ydl_opts = {'outtmpl':'vredditvid_' + numgen + '.mp4'}
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    ydl.download([vreddit_url])
-
-                vreddit_size = os.path.getsize('/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4')
-                if vreddit_size >= 8388608:
-                    compress_video('input.mp4', 'output.mp4', 50 * 1000, numgen)
-                    file = discord.File(r'/mnt/d/Documents/Bot/vredditcompress_' + numgen + '.mp4')
-                    sender = message.author
-                    await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "Title: **" + post_title + "**" +"\n<" + "vreddit_url (get rid of quotes on prod)" +">", mention_author = False)
-                    os.remove('vredditcompress_' + numgen + '.mp4')
-
-                else:
-                    file = discord.File(r'/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4')
-                    sender = message.author
-                    await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "Title: **" + post_title + "**" +"\n<" + "raw_vreddit_url(get rid of quotes on prod)" + ">", mention_author = False)
-                    #add vreddit_url and discord link to table
-                    discordapp_url = '1'
-                    db_connect(db_path=DEFAULT_PATH).execute("insert into contacts (name, phone, email) values (?, ?, ?)",(vreddit_url,discordapp_url))
-                cleanup_files(numgen)
+                file = discord.File(video_directory + raw_video_name)
+                sender = message.author
+                await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "Title: **" + post_title + "**" +"\n<" + vreddit_url + ">", mention_author = False)
+                #add vreddit_url and discord link to table
+                discordapp_url = '1'
+                # db_connect(db_path=DEFAULT_PATH).execute("insert into contacts (name, phone, email) values (?, ?, ?)",(vreddit_url,discordapp_url))
+            cleanup_files(raw_video_name, compressed_video_name)
         else:
             return
-
-    elif vreddit_match:
-        raw_vreddit_url = vreddit_match.group(0)
-        ydl_opts = {'outtmpl':'vredditvid_' + numgen + '.mp4'}
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([raw_vreddit_url])
-
-        vreddit_size = os.path.getsize('/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4')
-        if vreddit_size >= 8388608:
-            compress_video('input.mp4', 'output.mp4', 50 * 1000, numgen)
-
-            file = discord.File(r'/mnt/d/Documents/Bot/vredditcompress_' + numgen + '.mp4')
-            sender = message.author
-            await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "<" + "raw_vreddit_url(get rid of quotes on prod)" + ">", mention_author = False)
-            os.remove('vredditcompress_' + numgen + '.mp4')
-        else:
-            file = discord.File(r'/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4')
-            sender = message.author
-            await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "<" + "raw_vreddit_url(get rid of quotes on prod)" + ">", mention_author = False)
-        cleanup_files(numgen)
 
 #-------------------------------------------------------------------------------
     elif tc_ss in tc:
@@ -134,19 +96,23 @@ async def on_message(message):
     elif "chet?" in tc:
         await message.reply(content="<:chetstare:880848415792173117>", mention_author= False)
 
-
     else:
         return
 
-
-
-def cleanup_files(numgen):
-    os.remove('SPOILER_vredditvid_' + numgen + '.mp4')
-    os.remove('vredditvid_' + numgen + '.mp4')
+def cleanup_files(raw, compressed):
+    os.remove(raw)
+    os.remove(compressed)
     os.remove('ffmpeg2pass-0.log')
     os.remove('ffmpeg2pass-0.log.mbtree')
 
+def get_pattern(raw):
+    link_pattern = '(https:\/\/[old|new|www|v]+\.[reddit|redd]+\.[com|it]+[\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])+'
+    reg_pattern = 'https://(old\.|new\.|www\.)?reddit\.com/r/([\w.,@^=%&:/~+#-]*[\w@^=%&/~+#-])?'
+    link = re.search(link_pattern, raw)
 
+    if link:
+        print("Homogenised URL: {}".format(link.group(1)))
+        return re.search(reg_pattern, requests.head(link.group(1), allow_redirects = True).url)
 
 def db_connect(db_path=DEFAULT_PATH):
     con = sqlite3.connect(db_path)
