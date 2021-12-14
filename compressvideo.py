@@ -7,8 +7,8 @@ import random
 
 #THIS CODE TAKEN FROM: https://stackoverflow.com/questions/64430805/how-to-compress-video-to-target-size-by-python
 def compress_video(video_full_path, output_file_name, target_size, numgen):
-    video_full_path = '/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4'
-    output_file_name = 'vredditcompress_' + numgen + '.mp4'
+    #video_full_pathA = '/mnt/d/Documents/Bot/vredditvid_' + numgen + '.mp4'
+    #output_file_name = 'vredditcompress_' + numgen + '.mp4'
     target_size = 8000
     min_audio_bitrate = 32000
     max_audio_bitrate = 256000

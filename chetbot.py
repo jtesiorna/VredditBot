@@ -12,7 +12,7 @@ from compressvideo import compress_video
 #Global variables
 client = discord.Client()
 DEFAULT_PATH = os.path.join(os.path.dirname(__file__), 'database.discordurl')
-video_directory = '/home/nikita/Documents/Bot/' # <-- MODIFY THIS TO MATCH YOUR SHIT
+video_directory = '/mnt/d/Documents/Bot/' # <-- MODIFY THIS TO MATCH YOUR SHIT
 
 def main(argc, argv):
     #Private information:
@@ -38,6 +38,7 @@ async def on_message(message):
     tc = discord_message.lower()
     reg_match = get_pattern(discord_message)
 
+
 #-------------------------------------------------------------------------------
 # Main code block for getting the v.redd.it video, downloading, compressing, etc.
     if reg_match:
@@ -55,7 +56,7 @@ async def on_message(message):
         compressed_video_name = "vredditcompress_" + numgen + ".mp4"
 
         if json_data[0]['data']['children'][0]['data']['over_18']:
-            raw_video_name = "SPOLIER_" + raw_video_name
+            raw_video_name = "SPOILER_" + raw_video_name
             compressed_video_name = "SPOILER_" + compressed_video_name
 
         #if vreddit.url.startswith = query sqlite database
@@ -67,16 +68,17 @@ async def on_message(message):
 
             vreddit_size = os.path.getsize(video_directory + raw_video_name)
             if vreddit_size >= 8388608:
-                compress_video('input.mp4', 'output.mp4', 50 * 1000, numgen)
+                #compress_video('input.mp4', 'output.mp4', 50 * 1000, numgen)
+                compress_video(video_directory+raw_video_name, compressed_video_name, 50 * 1000, numgen)
                 file = discord.File(video_directory + compressed_video_name)
                 sender = message.author
-                await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "Title: **" + post_title + "**" +"\n<" + "vreddit_url (get rid of quotes on prod)" +">", mention_author = False)
+                await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "Title: **" + post_title + "**" +"\n<" + vreddit_url +">", mention_author = False)
                 # os.remove(compressed_video_name)
 
             else:
                 file = discord.File(video_directory + raw_video_name)
                 sender = message.author
-                await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "Title: **" + post_title + "**" +"\n<" + "raw_vreddit_url(get rid of quotes on prod)" + ">", mention_author = False)
+                await message.reply(file=file, content="**Hey! I saw that you posted a Reddit-hosted video.** \nYou can stay and watch it here instead, but here are the post comments: \n" + "Title: **" + post_title + "**" +"\n<" + vreddit_url + ">", mention_author = False)
                 #add vreddit_url and discord link to table
                 discordapp_url = '1'
                 # db_connect(db_path=DEFAULT_PATH).execute("insert into contacts (name, phone, email) values (?, ?, ?)",(vreddit_url,discordapp_url))
@@ -109,7 +111,7 @@ def get_pattern(raw):
     link = re.search(link_pattern, raw)
 
     if link:
-        print("Homogenised URL: {}".format(link))
+        print("Homogenised URL: {}".format(link.group(1)))
         return re.search(reg_pattern, requests.head(link.group(1), allow_redirects = True).url)
 
 def db_connect(db_path=DEFAULT_PATH):
