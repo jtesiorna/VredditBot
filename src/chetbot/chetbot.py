@@ -25,10 +25,9 @@ video_directory = "/tmp/downloads/"
 
 def main(argc, argv):
     # Private information:
-    with open("clientToken.txt", "r") as cl_token:
-        clienttoken = cl_token.read()
+    clientToken = os.environ.get("CHETBOT__CLIENT_TOKEN")
     # Run the client on the server
-    client.run(clienttoken)
+    client.run(clientToken)
 
 
 @client.event
