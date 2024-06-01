@@ -33,7 +33,7 @@ def main(argc, argv):
 @client.event
 async def on_ready():
     print("Yep. It's working.")
-    activityname = "Ye mum."
+    activityname = "Under new management."
     await client.change_presence(
         activity=discord.Activity(type=discord.ActivityType.playing, name=activityname)
     )
@@ -54,7 +54,7 @@ async def on_message(message):
     if reg_match:
         raw_reg_url = "https://www.reddit.com/r/" + reg_match.group(2)
         url_address = raw_reg_url + ".json"
-        headers = {"User-Agent": "vredit_bot/v0.1"}
+        headers = {"User-Agent": "vreddit_bot/v0.1"}
         raw_json = requests.get(url_address, headers=headers).json()
         json_parsed = json.dumps(raw_json)
         json_data = json.loads(json_parsed)
