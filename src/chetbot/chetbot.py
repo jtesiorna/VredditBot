@@ -7,6 +7,7 @@ import re
 import sqlite3
 import urllib
 import uuid
+from pathlib import Path
 from sys import argv
 from urllib.request import urlopen
 
@@ -120,7 +121,7 @@ async def on_message(message):
                 # add vreddit_url and discord link to table
                 discordapp_url = "1"
                 # db_connect(db_path=DEFAULT_PATH).execute("insert into contacts (name, phone, email) values (?, ?, ?)",(vreddit_url,discordapp_url))
-            cleanup_files(raw_video_name, compressed_video_name)
+            cleanup_files(video_directory, raw_video_name, compressed_video_name)
         else:
             return
 
@@ -139,11 +140,13 @@ async def on_message(message):
         return
 
 
-def cleanup_files(raw, compressed):
-    os.remove(raw)
-    os.remove(compressed)
-    os.remove("ffmpeg2pass-0.log")
-    os.remove("ffmpeg2pass-0.log.mbtree")
+def cleanup_files(video_directory, raw, compressed):
+    video_directory_path = Path(video_directory)
+
+    (video_directory_path / raw).unlink(missing_ok=True)
+    (video_directory_path / compressed).unlink(missing_ok=True)
+    (video_directory_path / "ffmpeg2pass-0.log").unlink(missing_ok=True)
+    (video_directory_path / "ffmpeg2pass-0.log.mbtree").unlink(missing_ok=True)
 
 
 def get_pattern(raw):
