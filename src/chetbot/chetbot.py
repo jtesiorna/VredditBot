@@ -20,7 +20,7 @@ from thankreplies import thankreply
 
 client = discord.Client()
 DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "database.discordurl")
-video_directory = "/mnt/d/Documents/Bot/"  # <-- MODIFY THIS TO MATCH YOUR SHIT
+video_directory = "/tmp/downloads/"
 
 
 def main(argc, argv):
