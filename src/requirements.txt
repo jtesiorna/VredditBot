@@ -1,0 +1,4 @@
+discord.py>=2
+ffmpeg>=1
+requests>=2
+yt_dlp>=2024
