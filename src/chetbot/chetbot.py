@@ -5,6 +5,7 @@ import os
 import random
 import re
 import sqlite3
+import sys
 import urllib
 import uuid
 from pathlib import Path
@@ -14,10 +15,10 @@ from urllib.request import urlopen
 import discord
 import ffmpeg
 import requests
+import yaml
 import yt_dlp
 from compressvideo import compress_video
 from discord.ext import commands
-from thankreplies import thankreply
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -26,12 +27,63 @@ client = discord.Client(intents=intents)
 DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "database.discordurl")
 video_directory = "/tmp/downloads/"
 
+REPLIES_MAP: dict[str, list[str]] = {}
+REPLIES_DEFAULT_KEY = "default"
+
+
+def _addReply(key: str, message: str):
+
+    if REPLIES_MAP.get(key, None) is None:
+        REPLIES_MAP[key] = []
+
+    REPLIES_MAP[key].append(message)
+
+
+def populateReplies():
+
+    filePath = Path("./replies.yaml")
+
+    if not filePath.exists():
+        print(
+            f"WARNING: {filePath.resolve()} could not be found! Continuing with no replies loaded...",
+            file=sys.stderr,
+        )
+        REPLIES_MAP[REPLIES_DEFAULT_KEY] = ["🤏 😑 welcome"]
+        return
+
+    replies = yaml.safe_load(filePath.read_text())
+
+    for reply in replies:
+        filter = reply.get("filter", None)
+
+        if filter is not None and len(filter) >= 1:
+            for user in filter:
+                _addReply(user, reply["message"])
+        else:
+            _addReply(REPLIES_DEFAULT_KEY, reply["message"])
+
 
 def main(argc, argv):
+    populateReplies()
     # Private information:
     clientToken = os.environ.get("CHETBOT__CLIENT_TOKEN")
     # Run the client on the server
     client.run(clientToken)
+
+
+def thankreply(author_id: str) -> str:
+
+    key = REPLIES_DEFAULT_KEY
+
+    if REPLIES_MAP.get(str(author_id), None) is not None:
+        key = str(author_id)
+
+    replies = REPLIES_MAP[key]
+
+    if len(replies) == 0:
+        return "🤏 😑 welcome"
+
+    return random.choice(replies)
 
 
 @client.event
@@ -127,8 +179,8 @@ async def on_message(message):
 
     elif tc_ss in tc:
         message_author_id = message.author.id
-        treply = thankreply(message_author_id)
-        await message.reply(content=treply, mention_author=False)
+        reply = thankreply(message_author_id)
+        await message.reply(content=reply, mention_author=False)
 
     # specifically for personal server. If you're using this code, you can remove this elif statement.
     elif "chet?" in tc:

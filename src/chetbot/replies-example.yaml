@@ -1,0 +1,6 @@
+- message: "A specific reply"
+  filter: ["012xxxxxxxxxxxxxxx"]
+- message: "A generic reply"
+- message: "Another generic reply"
+- message: "A specific reply for two users"
+  filter: ["012xxxxxxxxxxxxxxx", "013xxxxxxxxxxxxxxx"]
